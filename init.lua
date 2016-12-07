@@ -9,7 +9,10 @@ end
 local buttons = {}
 local buttons_num = 0
 
+local button_prefix = "sfinv_button_"
+
 sfinv_buttons = {}
+
 
 sfinv_buttons.register_button = function(name, def)
 	buttons[name] = def
@@ -30,7 +33,7 @@ sfinv.register_page("sfinv_buttons:buttons", {
 			end
 			f = f .. "button["..
 				"1,"..y..";3,1;"..
-				"sfinv_button_"..minetest.formspec_escape(name)..";"..
+				button_prefix..minetest.formspec_escape(name)..";"..
 				minetest.formspec_escape(def.title)..
 				"]"
 			y = y + 1
@@ -38,8 +41,11 @@ sfinv.register_page("sfinv_buttons:buttons", {
 		return sfinv.make_formspec(player, context, f)
 	end,
 	on_player_receive_fields = function(self, player, context, fields)
-		if fields.sfinv_button1 then
-			minetest.chat_send_player(player:get_player_name(), "Button 1 pressed!")
+		for widget_name, _ in pairs(fields) do
+			local id = string.sub(widget_name, string.len(button_prefix) + 1, -1)
+			if buttons[id] ~= nil and buttons[id].action ~= nil then
+				buttons[id].action(player)
+			end
 		end
 	end,
 })
