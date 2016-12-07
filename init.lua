@@ -37,23 +37,25 @@ sfinv.register_page("sfinv_buttons:buttons", {
 			w = 7
 		end
 		for name, def in pairs(buttons) do
-			if def.image ~= nil then
-				f = f .. "image["..(x+0.1)..","..(y+0.1)..";0.8,0.8;"..def.image.."]"
-			end
-			local button_id = minetest.formspec_escape(button_prefix .. name)
-			f = f .. "button["..
-				(x+1)..","..y..";"..w..",1;"..
-				button_id..";"..
-				minetest.formspec_escape(def.title)..
-				"]"
-			if def.tooltip ~= nil then
-				f = f .. "tooltip["..button_id..";"..
-					minetest.formspec_escape(def.tooltip).."]"
-			end
-			y = y + 1
-			if y >= MAX_ROWS then
-				y = 0
-				x = x + 4
+			if def.show == nil or def.show(player) == true then
+				if def.image ~= nil then
+					f = f .. "image["..(x+0.1)..","..(y+0.1)..";0.8,0.8;"..def.image.."]"
+				end
+				local button_id = minetest.formspec_escape(button_prefix .. name)
+				f = f .. "button["..
+					(x+1)..","..y..";"..w..",1;"..
+					button_id..";"..
+					minetest.formspec_escape(def.title)..
+					"]"
+				if def.tooltip ~= nil then
+					f = f .. "tooltip["..button_id..";"..
+						minetest.formspec_escape(def.tooltip).."]"
+				end
+				y = y + 1
+				if y >= MAX_ROWS then
+					y = 0
+					x = x + 4
+				end
 			end
 		end
 		return sfinv.make_formspec(player, context, f)
