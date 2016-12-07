@@ -9,7 +9,7 @@ sfinv_buttons.register_button = function(name, def)
 end
 
 sfinv.register_page("sfinv_buttons:buttons", {
-	title = "Buttons",
+	title = "More",
 	is_in_nav = function(self, player, context)
 		return buttons_num > 0
 	end,
