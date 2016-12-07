@@ -25,8 +25,11 @@ sfinv.register_page("sfinv_buttons:buttons", {
 		local f = ""
 		local y = 0
 		for name, def in pairs(buttons) do
+			if def.image ~= nil then
+				f = f .. "image[0.1,"..(y+0.1)..";0.8,0.8;"..def.image.."]"
+			end
 			f = f .. "button["..
-				"0,"..y..";3,1;"..
+				"1,"..y..";3,1;"..
 				"sfinv_button_"..minetest.formspec_escape(name)..";"..
 				minetest.formspec_escape(def.title)..
 				"]"
