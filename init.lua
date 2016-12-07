@@ -24,7 +24,13 @@ local MAX_ROWS = 9
 sfinv.register_page("sfinv_buttons:buttons", {
 	title = S("More"),
 	is_in_nav = function(self, player, context)
-		return buttons_num > 0
+		-- Tab is shown only if at least 1 button is visible to player
+		for _, def in pairs(buttons) do
+			if def.show == nil or def.show(player) == true then
+				return true
+			end
+		end
+		return false
 	end,
 	get = function(self, player, context)
 		local f = ""
