@@ -1,3 +1,11 @@
+-- Boilerplate to support localized strings if intllib mod is installed.
+local S
+if minetest.get_modpath("intllib") then
+	S = intllib.Getter()
+else
+	S = function(s) return s end
+end
+
 local buttons = {}
 local buttons_num = 0
 
@@ -9,7 +17,7 @@ sfinv_buttons.register_button = function(name, def)
 end
 
 sfinv.register_page("sfinv_buttons:buttons", {
-	title = "More",
+	title = S("More"),
 	is_in_nav = function(self, player, context)
 		return buttons_num > 0
 	end,
