@@ -19,6 +19,8 @@ sfinv_buttons.register_button = function(name, def)
 	buttons_num = buttons_num + 1
 end
 
+local MAX_ROWS = 9
+
 sfinv.register_page("sfinv_buttons:buttons", {
 	title = S("More"),
 	is_in_nav = function(self, player, context)
@@ -27,16 +29,27 @@ sfinv.register_page("sfinv_buttons:buttons", {
 	get = function(self, player, context)
 		local f = ""
 		local y = 0
+		local x = 0
+		local w
+		if buttons_num > MAX_ROWS then
+			w = 3
+		else
+			w = 7
+		end
 		for name, def in pairs(buttons) do
 			if def.image ~= nil then
-				f = f .. "image[0.1,"..(y+0.1)..";0.8,0.8;"..def.image.."]"
+				f = f .. "image["..(x+0.1)..","..(y+0.1)..";0.8,0.8;"..def.image.."]"
 			end
 			f = f .. "button["..
-				"1,"..y..";3,1;"..
+				(x+1)..","..y..";"..w..",1;"..
 				button_prefix..minetest.formspec_escape(name)..";"..
 				minetest.formspec_escape(def.title)..
 				"]"
 			y = y + 1
+			if y >= MAX_ROWS then
+				y = 0
+				x = x + 4
+			end
 		end
 		return sfinv.make_formspec(player, context, f)
 	end,
@@ -49,9 +62,3 @@ sfinv.register_page("sfinv_buttons:buttons", {
 		end
 	end,
 })
-
--- Test
-sfinv_buttons.register_button("button1", { title = "Button 1" })
-sfinv_buttons.register_button("button2", { title = "Button 2" })
-sfinv_buttons.register_button("button3", { title = "Button 3" })
-sfinv_buttons.register_button("button4", { title = "Button 4" })
