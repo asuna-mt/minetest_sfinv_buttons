@@ -7,19 +7,25 @@ else
 end
 
 local buttons = {}
+local button_names_sorted = {}
 local buttons_num = 0
 
 local button_prefix = "sfinv_button_"
 
-sfinv_buttons = {}
+-- Stores selected index in textlist
+local player_indexes = {}
 
+sfinv_buttons = {}
 
 sfinv_buttons.register_button = function(name, def)
 	buttons[name] = def
+	table.insert(button_names_sorted, name)
 	buttons_num = buttons_num + 1
 end
 
 local MAX_ROWS = 9
+local MAX_COLS = 2
+local MAX_BUTTONS = MAX_ROWS * MAX_COLS
 
 sfinv.register_page("sfinv_buttons:buttons", {
 	title = S("More"),
@@ -42,31 +48,74 @@ sfinv.register_page("sfinv_buttons:buttons", {
 		else
 			w = 7
 		end
-		for name, def in pairs(buttons) do
+		if buttons_num > MAX_BUTTONS then
+			f = f .. "textlist[0,0;7.8,8;sfinv_buttons_textlist;"
+		end
+		local buttons_added = 0
+		for i=1, #button_names_sorted do
+			local name = button_names_sorted[i]
+			local def = buttons[name]
 			if def.show == nil or def.show(player) == true then
-				if def.image ~= nil then
-					f = f .. "image["..(x+0.1)..","..(y+0.1)..";0.8,0.8;"..def.image.."]"
+				if buttons_num > MAX_BUTTONS then
+					if buttons_added >= 1 then
+						f = f .. ","
+					end
+					f = f .. minetest.formspec_escape(def.title)
+				else
+					if def.image ~= nil then
+						f = f .. "image["..(x+0.1)..","..(y+0.1)..";0.8,0.8;"..def.image.."]"
+					end
+					local button_id = minetest.formspec_escape(button_prefix .. name)
+					f = f .. "button["..
+						(x+1)..","..y..";"..w..",1;"..
+						button_id..";"..
+						minetest.formspec_escape(def.title)..
+						"]"
+					if def.tooltip ~= nil then
+						f = f .. "tooltip["..button_id..";"..
+							minetest.formspec_escape(def.tooltip).."]"
+					end
+					y = y + 1
+					if y >= MAX_ROWS then
+						y = 0
+						x = x + 4
+					end
 				end
-				local button_id = minetest.formspec_escape(button_prefix .. name)
-				f = f .. "button["..
-					(x+1)..","..y..";"..w..",1;"..
-					button_id..";"..
-					minetest.formspec_escape(def.title)..
-					"]"
-				if def.tooltip ~= nil then
-					f = f .. "tooltip["..button_id..";"..
-						minetest.formspec_escape(def.tooltip).."]"
-				end
-				y = y + 1
-				if y >= MAX_ROWS then
-					y = 0
-					x = x + 4
-				end
+				buttons_added = buttons_added + 1
 			end
+		end
+		if buttons_num > MAX_BUTTONS then
+			local index = player_indexes[player:get_player_name()]
+			if index ~= nil then
+				f = f .. ";" .. index
+			end
+			f = f .. "]"
+			f = f .. "button[0,8;8,1;sfinv_buttons_action;"..minetest.formspec_escape(S("Go")).."]"
 		end
 		return sfinv.make_formspec(player, context, f)
 	end,
 	on_player_receive_fields = function(self, player, context, fields)
+		-- FIXME: Support case when some buttons are hidden for player
+		if fields.sfinv_buttons_action then
+			local index = player_indexes[player:get_player_name()]
+			if index ~= nil then
+				local button = buttons[button_names_sorted[index]]
+				if button ~= nil and button.action ~= nil then
+					button.action(player)
+				end
+			end
+		elseif fields.sfinv_buttons_textlist then
+			local explode = minetest.explode_textlist_event(fields.sfinv_buttons_textlist)
+			if explode.type == "CHG" then
+				player_indexes[player:get_player_name()] = explode.index
+			elseif explode.type == "DCL" then
+				local button = buttons[button_names_sorted[explode.index]]
+				if button ~= nil and button.action ~= nil then
+					button.action(player)
+				end
+			end
+		end
+
 		for widget_name, _ in pairs(fields) do
 			local id = string.sub(widget_name, string.len(button_prefix) + 1, -1)
 			if buttons[id] ~= nil and buttons[id].action ~= nil then
@@ -75,3 +124,12 @@ sfinv.register_page("sfinv_buttons:buttons", {
 		end
 	end,
 })
+
+minetest.register_on_joinplayer(function(player)
+	player_indexes[player:get_player_name()] = nil
+end)
+
+minetest.register_on_leaveplayer(function(player)
+	player_indexes[player:get_player_name()] = nil
+end)
+
