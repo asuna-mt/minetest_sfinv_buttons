@@ -150,7 +150,3 @@ minetest.register_on_leaveplayer(function(player)
 	player_indexes[player:get_player_name()] = nil
 	player_selections[player:get_player_name()] = nil
 end)
-
-for i=1,20 do
-	sfinv_buttons.register_button(i, {title=i})
-end
