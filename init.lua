@@ -14,6 +14,7 @@ local button_prefix = "sfinv_button_"
 
 -- Stores selected index in textlist
 local player_indexes = {}
+local player_selections = {}
 
 sfinv_buttons = {}
 
@@ -21,6 +22,22 @@ sfinv_buttons.register_button = function(name, def)
 	buttons[name] = def
 	table.insert(button_names_sorted, name)
 	buttons_num = buttons_num + 1
+end
+
+-- Turns a textlist index to a button name
+local index_to_button_name = function(index, player)
+	local internal_index = 1
+	for i=1, #button_names_sorted do
+		local name = button_names_sorted[i]
+		local def = buttons[name]
+		if internal_index == index then
+			if def.show == nil or def.show(player) == true then
+				return name
+			end
+		end
+		internal_index = internal_index + 1
+	end
+	return nil
 end
 
 local MAX_ROWS = 9
@@ -95,31 +112,30 @@ sfinv.register_page("sfinv_buttons:buttons", {
 		return sfinv.make_formspec(player, context, f)
 	end,
 	on_player_receive_fields = function(self, player, context, fields)
-		-- FIXME: Support case when some buttons are hidden for player
+		local player_name = player:get_player_name()
+		-- TODO: Test support case when some buttons are hidden for player
 		if fields.sfinv_buttons_action then
-			local index = player_indexes[player:get_player_name()]
-			if index ~= nil then
-				local button = buttons[button_names_sorted[index]]
-				if button ~= nil and button.action ~= nil then
-					button.action(player)
-				end
+			local button = buttons[player_selections[player_name]]
+			if button ~= nil and button.action ~= nil then
+				button.action(player)
 			end
 		elseif fields.sfinv_buttons_textlist then
 			local explode = minetest.explode_textlist_event(fields.sfinv_buttons_textlist)
 			if explode.type == "CHG" then
-				player_indexes[player:get_player_name()] = explode.index
+				player_indexes[player_name] = explode.index
+				player_selections[player_name] = index_to_button_name(explode.index, player)
 			elseif explode.type == "DCL" then
 				local button = buttons[button_names_sorted[explode.index]]
 				if button ~= nil and button.action ~= nil then
 					button.action(player)
 				end
 			end
-		end
-
-		for widget_name, _ in pairs(fields) do
-			local id = string.sub(widget_name, string.len(button_prefix) + 1, -1)
-			if buttons[id] ~= nil and buttons[id].action ~= nil then
-				buttons[id].action(player)
+		else
+			for widget_name, _ in pairs(fields) do
+				local id = string.sub(widget_name, string.len(button_prefix) + 1, -1)
+				if buttons[id] ~= nil and buttons[id].action ~= nil then
+					buttons[id].action(player)
+				end
 			end
 		end
 	end,
@@ -127,9 +143,14 @@ sfinv.register_page("sfinv_buttons:buttons", {
 
 minetest.register_on_joinplayer(function(player)
 	player_indexes[player:get_player_name()] = nil
+	player_selections[player:get_player_name()] = nil
 end)
 
 minetest.register_on_leaveplayer(function(player)
 	player_indexes[player:get_player_name()] = nil
+	player_selections[player:get_player_name()] = nil
 end)
 
+for i=1,20 do
+	sfinv_buttons.register_button(i, {title=i})
+end
