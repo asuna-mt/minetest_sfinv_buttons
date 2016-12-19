@@ -18,10 +18,6 @@ Use this API to add your own buttons to the page.
     * `player`: ObjectRef to player who triggered the button
     * Default: Always shows button
 
-## Limits
-
-* Up to 18 buttons can be registered
-
 ## Recommendations
 
 * Try to summarize the most important information on the button
