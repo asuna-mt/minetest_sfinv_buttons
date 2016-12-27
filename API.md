@@ -1,18 +1,18 @@
 # API documentation for [`sfinv_buttons`]
 
-Use this very API to add your own buttons to the new tab. There is only
+Use this very simple API to add your own buttons to the new tab. There is only
 one function: `sfinv_buttons.register_button`.
 
 ## `sfinv_buttons.register_button(name, def)`
 
 * `name`: Unique button identifier
-* `def`: Coniguration table (see below)
+* `def`: Configuration table (see below)
 
 ### Fields of `def`
 * `title`: Human-readable text on the button
 * `action(player)`: Function is called when button is triggered
-    * `player`: ObjectRef to player who triggered the button
-    * Default: Nothing happens
+    * `player`: The `ObjectRef` of the player who triggered the button
+    * Default behaviour: Nothing happens
 * `tooltip: A tooltip for the button (optional, only use it for an additional,
   non-critical explanation)
 * `image`: Texture name for the image to show left of the button (optional)
